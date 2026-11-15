@@ -1,9 +1,15 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="color-scheme" content="dark" />
+    <meta name="color-scheme" content="light dark" />
+    <script>
+      /* Apply the saved theme before anything paints, so a saved
+         light choice never flashes dark (and the other way round).
+         Dark is the default when nothing has been saved yet. */
+      (function(){ try { var t = localStorage.getItem('efns-theme'); document.documentElement.setAttribute('data-theme', (t === 'light' || t === 'dark') ? t : 'dark'); } catch (e) { document.documentElement.setAttribute('data-theme', 'dark'); } })();
+    </script>
     <link rel="icon" href="data:," />
     <title>Elevate Faith Now Streaming</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -30,7 +36,34 @@
         --hink:#ffffff; --hmut:#D8DBEA; --htrack:rgba(255,255,255,.28);
         --hghost:rgba(255,255,255,.14); --hghostline:rgba(255,255,255,.5);
         --radius:14px;
+        color-scheme:dark;
       }
+      /* Light theme: same layout and same amber accent, on a light
+         base with dark text. Only the palette variables change, plus
+         a few text colors that sit on light surfaces (error reds and
+         amber text need darker shades to stay readable on white).
+         The heroes keep their dark shades in BOTH themes on purpose:
+         their words sit over the artwork, so they stay white on a
+         dark gradient exactly as they do in dark mode. */
+      :root[data-theme="light"]{
+        --bg:#F4F5FA; --bg2:#FFFFFF; --panel:#FFFFFF; --panel2:#E8EBF4;
+        --line:rgba(16,23,54,.15); --ink:#101736; --muted:#3D4566; --faint:#5B637F;
+        --goldtext:#8A5A00; --mint:rgba(255,176,32,.18);
+        --navbg:rgba(255,255,255,.94); --howbg:#FFFFFF;
+        --stepbg:#F0F2F9; --hover:rgba(16,23,54,.06);
+        --railbg:rgba(255,255,255,.96); --railink:#101736; --bodytext:#262E4D;
+        --sidebg:rgba(255,255,255,.96); --sideink:#3D4566;
+        color-scheme:light;
+      }
+      :root[data-theme="light"] .form-err,
+      :root[data-theme="light"] .pin-err{color:#B42318}
+      :root[data-theme="light"] .small-btn.danger{color:#B42318}
+      :root[data-theme="light"] .saved-note{color:var(--goldtext)}
+      :root[data-theme="light"] .act-head .tag.done{color:var(--goldtext);border-color:rgba(138,90,0,.55)}
+      :root[data-theme="light"] .buy-btn:disabled{background:#D9DDEA;color:#5B637F}
+      :root[data-theme="light"] .home-sec-head .viewall{color:var(--goldtext)}
+      :root[data-theme="light"] .show-card{box-shadow:0 4px 14px rgba(16,23,54,.10)}
+      :root[data-theme="light"] button.show-card:hover{box-shadow:0 12px 24px rgba(16,23,54,.16)}
       *{box-sizing:border-box}
       html{scroll-behavior:smooth}
       body{margin:0;background-color:var(--bg);color:var(--ink);font-family:"Nunito",system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:clip;
@@ -65,6 +98,16 @@
         font-family:"Archivo";font-weight:800;letter-spacing:.04em;font-size:13.5px;padding:11px 19px;min-height:44px;box-shadow:0 6px 16px rgba(255,176,32,.35)}
       .nav-parent:hover{background:var(--gold2)}
       .nav-parent svg{width:16px;height:16px}
+      /* Sun/moon theme toggle in the top nav. In dark mode it shows
+         the sun (tap for light); in light mode it shows the moon
+         (tap for dark). The choice is saved and restored on reload. */
+      .theme-toggle{flex:none;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--panel2);
+        color:var(--ink);display:grid;place-items:center;padding:0}
+      .theme-toggle:hover{background:var(--hover)}
+      .theme-toggle svg{width:20px;height:20px;display:block}
+      .theme-toggle .ic-moon{display:none}
+      :root[data-theme="light"] .theme-toggle .ic-sun{display:none}
+      :root[data-theme="light"] .theme-toggle .ic-moon{display:block}
       @media (max-width:900px){ .navlinks a{padding:8px 9px;font-size:12.5px} }
       @media (max-width:760px){
         .brand-name{font-size:13px}
@@ -457,6 +500,7 @@
       <span class="bal-wrap">
         <span class="bal-chip" id="balPoints" title="Demo Kid: points from watching videos and finishing Dig Deeper activities. Spend them in Rapid Rewards and Parent Rewards">&#11088; 0 pts</span>
       </span>
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to light mode" aria-pressed="false" title="Switch between light and dark mode"><svg class="ic-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg><svg class="ic-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
       <button class="nav-parent" id="cornerBtn" aria-label="Open Parent's Corner" title="Parent's Corner (demo PIN 0000)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Parent's Corner</button>
     </nav>
     <main>
@@ -1158,7 +1202,7 @@
           + '<div class="cat-grid">'+CATALOG.filter(it=>it.kind==='pet').map(card).join('')+'</div>'
           + '<div class="rw-sec-head"><h2>MY COLLECTION</h2><span>Everything you have unlocked stays here</span></div>'
           + (ownedList.length
-              ? '<div class="cat-grid">'+ownedList.map(it=>'<div class="cat-card"><div class="glyph">'+it.glyph+'</div><h3>'+it.name+'</h3><div style="font-size:12.5px;font-weight:800;color:#FFC95C">&#10003; Yours</div></div>').join('')+'</div>'
+              ? '<div class="cat-grid">'+ownedList.map(it=>'<div class="cat-card"><div class="glyph">'+it.glyph+'</div><h3>'+it.name+'</h3><div style="font-size:12.5px;font-weight:800;color:var(--goldtext)">&#10003; Yours</div></div>').join('')+'</div>'
               : '<p style="color:var(--muted);font-weight:700">Nothing yet. Watch a video and finish its Dig Deeper to earn points, then unlock your first sticker.</p>')
           + '<div class="rw-sec-head"><h2>PAST REWARDS</h2><span>Your unlock history</span></div>'
           + (rewardHistory.length
@@ -1315,6 +1359,25 @@
         else document.getElementById('pinErr').textContent = 'That PIN did not match. This demo uses 0000.';
       });
       document.getElementById('pinInput').addEventListener('keydown',e=>{ if (e.key==='Enter') document.getElementById('pinBtn').click(); });
+      /* Theme toggle: dark is the default. The head script already
+         applied any saved choice before paint; this keeps the
+         button label in sync and saves each new choice so the page
+         reopens in the mode that was picked. Only the theme choice
+         is saved; points and progress still reset on reload. */
+      function syncThemeToggle(){
+        const btn = document.getElementById('themeToggle');
+        if (!btn) return;
+        const light = document.documentElement.getAttribute('data-theme') === 'light';
+        btn.setAttribute('aria-label', light ? 'Switch to dark mode' : 'Switch to light mode');
+        btn.setAttribute('aria-pressed', light ? 'true' : 'false');
+      }
+      document.getElementById('themeToggle').addEventListener('click',()=>{
+        const next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', next);
+        try { localStorage.setItem('efns-theme', next); } catch (e) {}
+        syncThemeToggle();
+      });
+      syncThemeToggle();
       renderHome();
       renderBalances();
     </script>
