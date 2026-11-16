@@ -243,15 +243,24 @@
       .cs-result{margin-top:14px;background:var(--pink-soft);border:1.5px solid var(--pink);border-radius:14px;padding:14px 16px}
       .cs-result p{margin:0}
       .cs-result .cs-pts{margin-top:8px;font-size:12px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;color:var(--cyan)}
-      .gap{display:inline-block;min-width:76px;text-align:center;border-bottom:3px solid var(--pink);color:var(--pink);font-weight:900;padding:0 6px}
-      .gap.filled{color:var(--cyan);border-bottom-color:var(--cyan)}
+      .gap{display:inline-block;min-width:86px;text-align:center;border-bottom:3px solid var(--pink);color:var(--pink);font-weight:900;padding:2px 8px 3px;border-radius:10px 10px 0 0;transition:background .15s,box-shadow .15s,transform .15s;cursor:pointer;vertical-align:baseline}
+      .gap.filled{color:var(--cyan);border-bottom-color:var(--cyan);background:var(--cyan-soft);cursor:default}
+      .gap.drop-hover{background:var(--pink-soft);box-shadow:0 0 0 2px var(--pink), var(--glow-pink);transform:scale(1.06);color:var(--text)}
+      .gap.drop-ready{border-bottom-style:dashed}
       .gap-group{margin-top:14px}
       .gap-label{font-size:11.5px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:var(--cyan)}
       .word-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-      .word-chip{background:var(--panel2);border:1.5px solid var(--line);color:var(--text);border-radius:999px;padding:9px 18px;font-weight:800;font-size:14.5px;cursor:pointer}
-      .word-chip.right{border-color:var(--cyan);background:var(--cyan-soft);box-shadow:var(--glow-cyan)}
-      .word-chip.wrong{border-color:#ff5470;color:#ff8fa3;opacity:.5}
+      .word-chip{background:var(--panel2);border:1.5px solid var(--line);color:var(--text);border-radius:999px;padding:9px 18px;font-weight:800;font-size:14.5px;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;transition:transform .15s,box-shadow .15s,border-color .15s,background .15s,opacity .15s}
+      .word-chip:active{cursor:grabbing}
+      .word-chip.selected{border-color:var(--pink);background:var(--pink-soft);box-shadow:var(--glow-pink);transform:translateY(-2px)}
+      .word-chip.dragging{opacity:.35}
+      .word-chip.right{border-color:var(--cyan);background:var(--cyan-soft);box-shadow:var(--glow-cyan);cursor:default}
+      .word-chip.wrong{border-color:#ff5470;color:#ff8fa3;animation:ef-shake .35s ease}
       .word-chip[disabled]{cursor:default}
+      .drag-ghost{position:fixed;z-index:200;pointer-events:none;transform:translate(-50%,-50%) scale(1.07);box-shadow:var(--glow-pink), var(--shadow);cursor:grabbing;margin:0}
+      .drag-hint{display:flex;align-items:center;gap:8px;margin-top:14px;color:var(--muted);font-weight:700;font-size:13.5px;line-height:1.5}
+      .drag-hint svg{flex:none;color:var(--pink)}
+      @keyframes ef-shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
       .gap-done{margin-top:14px;font-weight:800;color:var(--cyan)}
       .draft-badge{display:inline-block;background:var(--pink);color:#fff;font-size:11px;font-weight:900;letter-spacing:.2em;
         padding:6px 12px;border-radius:999px;box-shadow:var(--glow-pink);vertical-align:middle}
@@ -507,8 +516,9 @@
             <div class="card cyan" id="dd-gap">
               <div class="meta-line">Step 5 &middot; Fill in the Gap &middot; 5 pts</div>
               <h3 style="margin-top:10px">Finish the Verse</h3>
-              <p>Here is the verse from Step 2 again, with three words missing. Tap the right word for each gap. Finish all three to earn the 5 verse points.</p>
-              <p class="verse-text">&ldquo;But the angel said to them, &lsquo;Do not be afraid. I bring you good news that will cause great <span class="gap" id="gap0">?</span> for all the people. Today in the town of David a <span class="gap" id="gap1">?</span> has been born to you; he is the Messiah, the <span class="gap" id="gap2">?</span>.&rsquo;&rdquo;</p>
+              <p>Here is the verse from Step 2 again, with three words missing. Drag the right word into each gap. Finish all three to earn the 5 verse points.</p>
+              <p class="verse-text">&ldquo;But the angel said to them, &lsquo;Do not be afraid. I bring you good news that will cause great <span class="gap" id="gap0" data-gap="0" role="button" tabindex="0" aria-label="Gap 1, drop a word here">?</span> for all the people. Today in the town of David a <span class="gap" id="gap1" data-gap="1" role="button" tabindex="0" aria-label="Gap 2, drop a word here">?</span> has been born to you; he is the Messiah, the <span class="gap" id="gap2" data-gap="2" role="button" tabindex="0" aria-label="Gap 3, drop a word here">?</span>.&rsquo;&rdquo;</p>
+              <p class="drag-hint"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/></svg><span>Drag a word into a gap, or tap a word and then tap a gap.</span></p>
               <div class="gap-group">
                 <span class="gap-label">Gap 1</span>
                 <div class="word-chips">
@@ -891,27 +901,179 @@
 
       const GAP_ANSWERS = ["joy", "Savior", "Lord"];
       const gapsSolved = [false, false, false];
-      $$(".word-chip").forEach(function(chip){
-        chip.addEventListener("click", function(){
-          const gi = Number(chip.getAttribute("data-gap"));
-          if (gapsSolved[gi] || chip.disabled) return;
-          if (chip.getAttribute("data-word") === GAP_ANSWERS[gi]){
-            gapsSolved[gi] = true;
-            const slot = $("#gap" + gi);
-            slot.textContent = GAP_ANSWERS[gi];
-            slot.classList.add("filled");
-            chip.classList.add("right");
-            $$(".word-chip[data-gap='" + gi + "']").forEach(function(c){ c.disabled = true; });
-            if (gapsSolved.every(Boolean)){
-              $("#gapDone").hidden = false;
-              award("verse");
-            } else {
-              toast("That is one. " + gapsSolved.filter(Boolean).length + " of 3 gaps filled.");
-            }
+      const gapEls = [$("#gap0"), $("#gap1"), $("#gap2")];
+      let selectedChip = null;
+      let dragState = null;
+      let suppressClick = false;
+      let suppressGapClick = false;
+
+      function clearSelectedChip(){
+        if (selectedChip) selectedChip.classList.remove("selected");
+        selectedChip = null;
+        gapEls.forEach(function(g){ if (g) g.classList.remove("drop-ready"); });
+      }
+      function selectChip(chip){
+        if (selectedChip === chip){ clearSelectedChip(); return; }
+        clearSelectedChip();
+        selectedChip = chip;
+        chip.classList.add("selected");
+        gapEls.forEach(function(g, i){ if (g && !gapsSolved[i]) g.classList.add("drop-ready"); });
+      }
+      function attemptDrop(chip, gi){
+        if (!chip || chip.disabled || gapsSolved[gi]) return false;
+        const word = chip.getAttribute("data-word");
+        if (word === GAP_ANSWERS[gi]){
+          gapsSolved[gi] = true;
+          const slot = gapEls[gi];
+          slot.textContent = GAP_ANSWERS[gi];
+          slot.classList.add("filled");
+          slot.classList.remove("drop-hover", "drop-ready");
+          slot.setAttribute("aria-label", "Gap " + (gi + 1) + ", filled with " + GAP_ANSWERS[gi]);
+          chip.classList.remove("selected");
+          chip.classList.add("right");
+          if (selectedChip === chip) selectedChip = null;
+          $$(".word-chip[data-gap='" + gi + "']").forEach(function(c){ c.disabled = true; c.classList.remove("selected"); });
+          gapEls.forEach(function(g, i){ if (g && !gapsSolved[i] && selectedChip) g.classList.add("drop-ready"); else if (g) g.classList.remove("drop-ready"); });
+          if (!selectedChip) gapEls.forEach(function(g){ if (g) g.classList.remove("drop-ready"); });
+          if (gapsSolved.every(Boolean)){
+            $("#gapDone").hidden = false;
+            award("verse");
           } else {
-            chip.classList.add("wrong");
-            chip.disabled = true;
-            toast("Not that one. Try another word.");
+            toast("That is one. " + gapsSolved.filter(Boolean).length + " of 3 gaps filled.");
+          }
+          return true;
+        } else {
+          chip.classList.remove("selected");
+          if (selectedChip === chip) selectedChip = null;
+          gapEls.forEach(function(g){ if (g) g.classList.remove("drop-ready"); });
+          chip.classList.remove("wrong");
+          /* Force reflow so the shake can replay on a repeat wrong try */
+          void chip.offsetWidth;
+          chip.classList.add("wrong");
+          setTimeout(function(){ chip.classList.remove("wrong"); }, 500);
+          toast("Not that one. It goes back to the word bank, try another gap.");
+          return false;
+        }
+      }
+      function gapIndexFromPoint(x, y){
+        let found = -1;
+        gapEls.forEach(function(g, i){
+          if (!g || gapsSolved[i]) return;
+          const r = g.getBoundingClientRect();
+          const pad = 14;
+          if (x >= r.left - pad && x <= r.right + pad && y >= r.top - pad && y <= r.bottom + pad) found = i;
+        });
+        return found;
+      }
+      function clearDropHover(){
+        gapEls.forEach(function(g){ if (g) g.classList.remove("drop-hover"); });
+      }
+
+      $$(".word-chip").forEach(function(chip){
+        chip.setAttribute("aria-label", "Drag the word " + chip.getAttribute("data-word") + " into a gap, or tap to pick it up");
+        chip.addEventListener("pointerdown", function(e){
+          if (chip.disabled) return;
+          /* Mouse, touch and pen all come through pointer events */
+          dragState = {
+            chip: chip,
+            pointerId: e.pointerId,
+            startX: e.clientX,
+            startY: e.clientY,
+            dragging: false,
+            ghost: null,
+            hoverGap: -1
+          };
+        });
+        /* Stop the button click that follows a drag or a pointer tap from double-handling */
+        chip.addEventListener("click", function(e){
+          if (suppressClick){ e.preventDefault(); e.stopPropagation(); suppressClick = false; return; }
+          /* Keyboard activation (Enter / Space) has no pointer drag: treat it as a tap to pick up */
+          if (e.detail === 0 && !chip.disabled){
+            selectChip(chip);
+          }
+        });
+      });
+
+      window.addEventListener("pointermove", function(e){
+        if (!dragState || e.pointerId !== dragState.pointerId) return;
+        const dx = e.clientX - dragState.startX;
+        const dy = e.clientY - dragState.startY;
+        if (!dragState.dragging && Math.hypot(dx, dy) > 9){
+          dragState.dragging = true;
+          clearSelectedChip();
+          dragState.chip.classList.add("dragging");
+          const ghost = dragState.chip.cloneNode(true);
+          ghost.classList.remove("dragging", "selected", "wrong");
+          ghost.classList.add("drag-ghost");
+          ghost.removeAttribute("id");
+          ghost.disabled = false;
+          ghost.style.width = dragState.chip.offsetWidth + "px";
+          ghost.style.left = e.clientX + "px";
+          ghost.style.top = e.clientY + "px";
+          document.body.appendChild(ghost);
+          dragState.ghost = ghost;
+        }
+        if (dragState.dragging){
+          e.preventDefault();
+          dragState.ghost.style.left = e.clientX + "px";
+          dragState.ghost.style.top = e.clientY + "px";
+          const gi = gapIndexFromPoint(e.clientX, e.clientY);
+          dragState.hoverGap = gi;
+          clearDropHover();
+          if (gi >= 0 && gapEls[gi]) gapEls[gi].classList.add("drop-hover");
+        }
+      }, { passive: false });
+
+      window.addEventListener("pointerup", function(e){
+        if (!dragState || e.pointerId !== dragState.pointerId) return;
+        const state = dragState;
+        dragState = null;
+        if (state.dragging){
+          suppressClick = true;
+          setTimeout(function(){ suppressClick = false; }, 350);
+          if (state.ghost) state.ghost.remove();
+          state.chip.classList.remove("dragging");
+          clearDropHover();
+          const finalGap = gapIndexFromPoint(e.clientX, e.clientY);
+          const targetGap = finalGap >= 0 ? finalGap : state.hoverGap;
+          if (targetGap >= 0){
+            suppressGapClick = true;
+            setTimeout(function(){ suppressGapClick = false; }, 400);
+            attemptDrop(state.chip, targetGap);
+          }
+          /* Dropped nowhere: the chip simply stays in the word bank */
+        } else {
+          /* Tap fallback: tap a word to pick it up */
+          suppressClick = true;
+          setTimeout(function(){ suppressClick = false; }, 350);
+          if (!state.chip.disabled) selectChip(state.chip);
+        }
+      });
+      window.addEventListener("pointercancel", function(e){
+        if (!dragState || e.pointerId !== dragState.pointerId) return;
+        if (dragState.ghost) dragState.ghost.remove();
+        dragState.chip.classList.remove("dragging");
+        clearDropHover();
+        dragState = null;
+      });
+
+      /* Tap fallback, second half: tap a gap while a word is picked up */
+      gapEls.forEach(function(g, gi){
+        if (!g) return;
+        g.addEventListener("click", function(){
+          if (suppressGapClick){ suppressGapClick = false; return; }
+          if (gapsSolved[gi]) return;
+          if (selectedChip){
+            const chip = selectedChip;
+            attemptDrop(chip, gi);
+          } else {
+            toast("Pick a word first, then tap a gap. Or drag a word here.");
+          }
+        });
+        g.addEventListener("keydown", function(e){
+          if ((e.key === "Enter" || e.key === " ") && selectedChip && !gapsSolved[gi]){
+            e.preventDefault();
+            attemptDrop(selectedChip, gi);
           }
         });
       });
